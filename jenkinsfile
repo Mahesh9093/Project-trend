@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hubcred')
+        AWS_CREDS = credentials('aws-eks-cred')
+        DOCKER_IMAGE = "mahesh0504/project-trend"
+        AWS_REGION = "ap-south-1"
+        CLUSTER_NAME = "trend-eks"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Mahesh9093/Project-trend.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh """
+                  docker build -t $DOCKER_IMAGE:\$BUILD_NUMBER .
+                  echo "$DOCKER_HUB_CREDENTIALS_PSW" | docker login -u "$DOCKER_HUB_CREDENTIALS_USR" --password-stdin
+                  docker push $DOCKER_IMAGE:\$BUILD_NUMBER
+                """
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                withEnv(["AWS_ACCESS_KEY_ID=${AWS_CREDS_USR}", "AWS_SECRET_ACCESS_KEY=${AWS_CREDS_PSW}"]) {
+                    sh """
+                      aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
+                      kubectl apply -f k8s/deployment.yml
+                      kubectl apply -f k8s/service.yml
+                    """
+                }
+            }
+        }
+    }
+}
