@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: trend-web-svc
+  namespace: trend
+spec:
+  type: LoadBalancer
+  selector:
+    app: trend-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
