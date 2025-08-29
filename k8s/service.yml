@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: trend-web-svc
-  namespace: trend
+  name: project-trend-service
+  namespace: default
 spec:
-  type: LoadBalancer
+  type: LoadBalancer   # or NodePort if testing locally
   selector:
-    app: trend-web
+    app: project-trend
   ports:
-    - name: http
-      port: 80
-      targetPort: 3000
+    - protocol: TCP
+      port: 80         # external port
+      targetPort: 3000 # container port
