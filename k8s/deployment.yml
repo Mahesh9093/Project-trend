@@ -1,42 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: trend-web
-  namespace: trend
-labels:
-  app: trend-web
+  name: project-trend
+  namespace: default
+  labels:
+    app: project-trend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: trend-web
+      app: project-trend
   template:
     metadata:
       labels:
-        app: trend-web
+        app: project-trend
     spec:
       containers:
-        - name: trend-web
-          image: DOCKERHUB_USER/project-trend
-          imagePullPolicy: IfNotPresent
+        - name: project-trend       # <-- must match Jenkinsfile "kubectl set image" container name
+          image: mahesh0504/project-trend:v1  # Jenkins will replace this with latest tag
           ports:
             - containerPort: 3000
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 3000
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 3000
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
+          env:
+            - name: NODE_ENV
+              value: "production"
