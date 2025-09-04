@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hubcred')
+        DOCKER_HUB_CREDENTIALS = credentials('Docker-hubcred')
         AWS_CREDS = credentials('aws-eks-cred')
         DOCKER_IMAGE = "mahesh0504/project-trend"
         AWS_REGION = "ap-south-1"
