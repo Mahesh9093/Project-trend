@@ -16,8 +16,12 @@ spec:
         app: project-trend
     spec:
       containers:
-        - name: project-trend       # <-- must match Jenkinsfile "kubectl set image" container name
-          image: mahesh0504/project-trend # Jenkins will replace this with latest tag
+        - name: project-trend       # Matches "kubectl set image" in Jenkinsfile
+          image: mahesh0504/project-trend:latest
           ports:
             - containerPort: 80
-          
+          resources:
+            requests:
+              cpu: "100m"        # Request 0.1 CPU
+            limits:
+              cpu: "250m"        # Limit to 0.25 CPU
