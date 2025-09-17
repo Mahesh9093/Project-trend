@@ -6,7 +6,7 @@ metadata:
   labels:
     app: project-trend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: project-trend
@@ -17,9 +17,7 @@ spec:
     spec:
       containers:
         - name: project-trend       # <-- must match Jenkinsfile "kubectl set image" container name
-          image: mahesh0504/project-trend:v1  # Jenkins will replace this with latest tag
+          image: mahesh0504/project-trend # Jenkins will replace this with latest tag
           ports:
-            - containerPort: 3000
-          env:
-            - name: NODE_ENV
-              value: "production"
+            - containerPort: 80
+          
