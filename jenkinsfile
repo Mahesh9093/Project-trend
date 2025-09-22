@@ -2,38 +2,58 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_CREDENTIALS = credentials('Docker-hubcred')
-        AWS_CREDS = credentials('aws-eks-cred')
-        DOCKER_IMAGE = "mahesh0504/project-trend"
-        AWS_REGION = "ap-south-1"
-        CLUSTER_NAME = "trend-eks"
+        AWS_REGION   = "ap-south-1"
+        CLUSTER_NAME = "project-trend"
     }
 
     stages {
-        stage('Checkout') {
+        stage("Code Clone") {
             steps {
-                git branch: 'main', url: 'https://github.com/Mahesh9093/Project-trend.git'
+                echo "Code Clone Stage"
+                git url: "https://github.com/Mahesh9093/Project-trend.git", branch: "main"
             }
         }
 
-        stage('Build Docker Image') {
+        stage("Code Build & Test") {
             steps {
-                sh """
-                  docker build -t $DOCKER_IMAGE:\$BUILD_NUMBER .
-                  echo "$DOCKER_HUB_CREDENTIALS_PSW" | docker login -u "$DOCKER_HUB_CREDENTIALS_USR" --password-stdin
-                  docker push $DOCKER_IMAGE:\$BUILD_NUMBER
-                """
+                echo "Code Build Stage"
+                sh "docker build -t project-trend-app ."
+            }
+        }
+
+        stage("Push To DockerHub") {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: "docker-hub-cred",
+                    usernameVariable: "dockerHubUser", 
+                    passwordVariable: "dockerHubPass")]) {
+
+                    sh 'echo $dockerHubPass | docker login -u $dockerHubUser --password-stdin'
+                    sh "docker tag project-trend-app:latest $dockerHubUser/project-trend:latest"
+                    sh "docker push $dockerHubUser/project-trend:latest"
+                    
+                    // Save the username in a file to pass to the next stage
+                    sh 'echo $dockerHubUser > dockerHubUser.txt'
+                }
             }
         }
 
         stage('Deploy to EKS') {
             steps {
-                withEnv(["AWS_ACCESS_KEY_ID=${AWS_CREDS_USR}", "AWS_SECRET_ACCESS_KEY=${AWS_CREDS_PSW}"]) {
+                // Retrieve the username saved in the previous stage
+                script {
+                    
+                
+
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-eks']]) {
                     sh """
-                      aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
-                      kubectl apply -f k8s/deployment.yml
-                      kubectl apply -f k8s/service.yml
+                    aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME --kubeconfig /var/lib/jenkins/.kube/config
+                    chown -R jenkins:jenkins /var/lib/jenkins/.kube
+                    kubectl --kubeconfig /var/lib/jenkins/.kube/config apply -f k8s/deployment.yml
+                    kubectl --kubeconfig /var/lib/jenkins/.kube/config apply -f k8s/service.yml
+                    
                     """
+                  }
                 }
             }
         }
