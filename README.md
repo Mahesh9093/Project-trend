@@ -42,7 +42,7 @@ Cluster health monitored via Prometheus + Grafana.
       Configured GitHub Webhook.
       Declarative pipeline (Jenkinsfile):
 
-6. Monitoring Setup
+5. Monitoring Setup
     Installed Prometheus for metrics collection.
     Installed Grafana for visualization.
     Created dashboards to monitor:
